@@ -1,0 +1,11 @@
+# Build artifacts
+*.obj
+*.dll
+*.lib
+*.exp
+*.exe
+*.pdb
+*.ilk
+
+# Output directory
+bin/
