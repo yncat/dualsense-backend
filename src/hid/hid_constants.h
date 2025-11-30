@@ -57,6 +57,20 @@
 #define PLAYER_LED_MIDDLE_LEFT 0x02
 #define PLAYER_LED_MIDDLE_RIGHT 0x08
 
+// ========================================
+// Touchpad Data Offsets
+// ========================================
+#define TOUCHPAD1_OFFSET 0x20
+#define TOUCHPAD2_OFFSET 0x24
+
+// Touchpad bit masks and shifts
+#define TOUCH_ID_MASK 0x0000007F      // Bits 0-6
+#define TOUCH_DOWN_BIT (1 << 7)       // Bit 7 (0=down, 1=up)
+#define TOUCH_X_MASK 0x000FFF00       // Bits 8-19
+#define TOUCH_Y_MASK 0xFFF00000       // Bits 20-31
+#define TOUCH_X_SHIFT 8
+#define TOUCH_Y_SHIFT 20
+
 // Note: DSConnectionType, DSDeviceType, DSLedMic, DSLedPlayer, and DSLedBrightness
 // are defined in dualsense.h (public API header)
 

@@ -6,6 +6,27 @@
 #include <cstring>
 #include <cstdio>
 
+namespace {
+
+// Parse a single touch point from HID input buffer
+// Reference: orig/WindowsDualsense_ds5w/Private/Core/DualSense/DualSenseLibrary.cpp:260-305
+DSTouchPoint ParseTouchPoint(const unsigned char* hid_input, size_t offset) {
+    DSTouchPoint touch = {};
+
+    // Read 4 bytes as 32-bit integer (little-endian)
+    const int32_t raw = *reinterpret_cast<const int32_t*>(&hid_input[offset]);
+
+    // Extract fields using bit manipulation
+    touch.id = (raw & TOUCH_ID_MASK) % 10;
+    touch.is_active = (raw & TOUCH_DOWN_BIT) == 0;  // 0=down, 1=up
+    touch.x = (raw & TOUCH_X_MASK) >> TOUCH_X_SHIFT;
+    touch.y = (raw & TOUCH_Y_MASK) >> TOUCH_Y_SHIFT;
+
+    return touch;
+}
+
+} // anonymous namespace
+
 namespace dualsense {
 
 DeviceManager& DeviceManager::Instance() {
@@ -114,13 +135,26 @@ DSResult DeviceManager::GetInputState(DSInputState* out_state) {
         return DS_ERROR_INVALID_PARAM;
     }
 
+    std::lock_guard<std::mutex> lock(mutex_);
+
     if (!device_.is_connected) {
         return DS_ERROR_NOT_CONNECTED;
     }
 
-    // TODO: Parse input buffer into DSInputState
-    // For now, zero it out
+    // Zero out the structure
     memset(out_state, 0, sizeof(DSInputState));
+
+    // Calculate padding offset (Bluetooth has 2-byte header, USB has 1-byte)
+    const size_t padding = (device_.connection_type == DS_CONNECTION_BLUETOOTH) ? 2 : 1;
+    const unsigned char* hid_input = &device_.buffer_input[padding];
+
+    // Parse touchpad data
+    out_state->touch1 = ParseTouchPoint(hid_input, TOUCHPAD1_OFFSET);
+    out_state->touch2 = ParseTouchPoint(hid_input, TOUCHPAD2_OFFSET);
+
+    // Parse touchpad button (offset 0x09, bit 0x02)
+    out_state->button_touchpad = (hid_input[0x09] & BTN_PAD_BUTTON) != 0;
+
     return DS_OK;
 }
 

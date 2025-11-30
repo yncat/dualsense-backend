@@ -71,6 +71,18 @@ typedef enum {
 } DSLedBrightness;
 
 // ========================================
+// Touchpad State Structure
+// ========================================
+// Touchpad coordinates use raw 12-bit values (0-4095)
+// To normalize to 0.0-1.0 range: normalized = raw / 4095.0f
+typedef struct {
+    uint16_t x;              // X coordinate (0-4095)
+    uint16_t y;              // Y coordinate (0-4095)
+    uint8_t id;              // Touch ID (0-9)
+    bool is_active;          // True if touch is currently down
+} DSTouchPoint;
+
+// ========================================
 // Input State Structure
 // ========================================
 typedef struct {
@@ -116,6 +128,10 @@ typedef struct {
     // Battery level (0-100, or negative if charging)
     int8_t battery_level;
     bool battery_charging;
+
+    // Touchpad (2-point multi-touch)
+    DSTouchPoint touch1;
+    DSTouchPoint touch2;
 } DSInputState;
 
 // ========================================
